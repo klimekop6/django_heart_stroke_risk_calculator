@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% block title %}<title>Heart Stroke Risk</title>{% endblock %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {% load static %}
+    <link rel="stylesheet" type="text/css" href="{% static 'home_page/css/bootstrap.css' %}">
+    <link rel="shortcut icon" type="image/png" href="{% static 'home_page/images/favicon.png' %}" />
+    {% block script %} {% endblock %}
+    <style>
+        .form-check-input:checked {
+            background-color: #212529;
+            border-color: #212529;
+        }
+
+        .form-control:focus {
+            color: #212529;
+            background-color: #fff;
+            border-color: #212529;
+            outline: 0;
+            box-shadow: 0 0 0 0.25rem rgb(33 37 41 / 25%);
+        }
+    </style>
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+    <header class="site-header bg-dark sticky-top py-2 py-sm-1">
+        <h1 class="text-light text-center my-0">Kalkulator ryzyka zawału</h1>
+    </header>
+
+    <div class="container-lg px-2 my-5">
+        <div class="shadow-lg bg-light border border-dark rounded-3">
+            {% block content %} {% endblock %}
+        </div>
+    </div>
+
+    <footer class="mt-auto border-top border-dark pt-3">
+        <p class="text-center">© 2022 Klemens Karaś</p>
+    </footer>
+
+    <script src="{% static 'home_page/js/bootstrap.js' %}"></script>
+</body>
+
+</html>

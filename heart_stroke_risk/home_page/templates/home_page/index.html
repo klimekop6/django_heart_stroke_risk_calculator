@@ -1,0 +1,323 @@
+{% extends "home_page/base_generic.html" %}
+
+{% block script %}
+<script>
+    function switch_form(blocks_id, display) {
+        let class_string = document.getElementById(blocks_id[0]).className;
+        let required_value;
+
+        if (display == 'show') {
+            class_string = class_string.replace('d-none', 'd-flex');
+            required_value = true;
+        }
+        else {
+            class_string = class_string.replace('d-flex', 'd-none');
+            required_value = false;
+        }
+
+        blocks_id.forEach(block_id => {
+            let block = document.getElementById(block_id);
+            block.className = class_string;
+
+            let inputs = Array.from(block.getElementsByTagName('input'));
+            inputs.forEach(input => {
+                input.required = required_value;
+            });
+        });
+    }
+
+    function submit_form() {
+
+        var form_element = document.querySelector('form')
+        var data_string = new URLSearchParams(new FormData(form_element)).toString()
+
+        var xhr = new XMLHttpRequest();
+        xhr.open("POST", "{% url 'predict_post' %}", true);
+
+        //Send the proper header information along with the request
+        xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+
+        xhr.onreadystatechange = function () { // Call a function when the state changes.
+            if (this.readyState === XMLHttpRequest.DONE && this.status === 200) {
+                console.log(xhr.response)
+                const low_risk = document.getElementById('low_risk');
+                const high_risk = document.getElementById('high_risk');
+
+                if (xhr.response == '0') {
+                    low_risk.className = low_risk.className.replace('d-none', 'd-block');
+                    high_risk.className = high_risk.className.replace('d-block', 'd-none');
+                    if (new URLSearchParams(data_string).get('sex') == '0') {
+                        low_risk.textContent = 'Ufff na razie jesteś bezpieczny! :-)';
+                    }
+                    else {
+                        low_risk.textContent = 'Ufff na razie jesteś bezpieczna! :-)';
+                    }
+                }
+                else {
+                    low_risk.className = low_risk.className.replace('d-block', 'd-none');
+                    high_risk.className = high_risk.className.replace('d-none', 'd-block');
+                }
+            }
+        }
+        xhr.send(data_string);
+    }
+
+</script>
+{% endblock %}
+
+{% block content %}
+
+
+<div class="row justify-content-center align-items-center mx-1">
+    <div class="btn-group py-3" role="group" aria-label="Basic radio toggle button group">
+        <input type="radio" class="btn-check" name="btnradio" id="basic_calc"
+            onclick="switch_form(['thall', 'caa', 'restecg', 'oldpeak', 'slp'], 'hide')" autocomplete="off" checked>
+        <label class="btn btn-outline-dark" for="basic_calc">Podstawowy</label>
+
+        <input type="radio" class="btn-check" name="btnradio" id="extended_calc"
+            onclick="switch_form(['thall', 'caa', 'restecg', 'oldpeak', 'slp'], 'show')" autocomplete="off">
+        <label class="btn btn-outline-dark" for="extended_calc">Rozszerzony</label>
+    </div>
+</div>
+
+<form action="{% url 'predict_post' %}" method="post" onsubmit="submit_form(); return false">
+
+    {% csrf_token %}
+
+    <div class="row justify-content-center align-items-center py-2 mx-1">
+        <div class="col-6 col-xl-4 text-end">
+            <label class="col-form-label">Wiek</label>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="col-5 col-sm-3 col-md-2">
+                <input type="text" class="form-control text-center border-dark" name="age" required>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center align-items-center py-2 mx-1">
+        <div class="col-6 col-xl-4 text-end">
+            <label class="col-form-label pt-0">Płeć</label>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="sex" id="sexRadio2" value="0"
+                    required>
+                <label class="form-check-label" for="sexRadio2">Mężczyzna</label>
+            </div>
+
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="sex" id="sexRadio1" value="1"
+                    required>
+                <label class="form-check-label" for="sexRadio1">Kobieta</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center align-items-center py-2 mx-1">
+        <div class="col-6 col-xl-4 text-end">
+            <label class="col-form-label pt-0">Ból w klatce</label>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="cp" id="cpRadio1" value="0"
+                    required>
+                <label class="form-check-label" for="cpRadio1">Brak</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="cp" id="cpRadio2" value="1"
+                    required>
+                <label class="form-check-label" for="cpRadio2">Lekki</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="cp" id="cpRadio3" value="2"
+                    required>
+                <label class="form-check-label" for="cpRadio3">Średnii</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="cp" id="cpRadio4" value="3"
+                    required>
+                <label class="form-check-label" for="cpRadio4">Ciężki</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center align-items-center py-2 mx-1">
+        <div class="col-6 col-xl-4 text-end"><label class="col-form-label">Ciśnienie skurczowe krwi</label>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="col-5 col-sm-3 col-md-2">
+                <input type="text" class="form-control text-center border-dark" name="trtbps" required>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center align-items-center py-2 mx-1">
+        <div class="col-6 col-xl-4 text-end"><label class="col-form-label">Cholesterol całkowity</label></div>
+        <div class="col-6 col-xl-4">
+            <div class="col-5 col-sm-3 col-md-2">
+                <input type="text" class="form-control text-center border-dark" name="chol" required>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center align-items-center py-2 mx-1">
+        <div class="col-6 col-xl-4 text-end">
+            <label class="col-form-label pt-0">Cukier na czczo</label>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="fbs" id="fbsRadio1" value="0"
+                    required>
+                <label class="form-check-label" for="fbsRadio1">&lt; 120mg/dl</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="fbs" id="fbsRadio2" value="1"
+                    required>
+                <label class="form-check-label" for="fbsRadio2">&gt; 120mg/dl</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none row justify-content-center align-items-center py-2 mx-1" id="restecg">
+        <div class="col-6 col-xl-4 text-end">
+            <label class="col-form-label pt-0">Spoczynkowy pomiar elektrokardiograficzny</label>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="form-check form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="restecg" id="restecgRadio1"
+                    value="0">
+                <label class="form-check-label" for="restecgRadio1">Przerost lewej komory serca</label>
+            </div>
+            <div class="form-check form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="restecg" id="restecgRadio2"
+                    value="1">
+                <label class="form-check-label" for="restecgRadio2">Prawidłowe</label>
+            </div>
+            <div class="form-check form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="restecg" id="restecgRadio3"
+                    value="2">
+                <label class="form-check-label" for="restecgRadio3">Nieprawidłowy odcinek ST-T</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center align-items-center py-2 mx-1">
+        <div class="col-6 col-xl-4 text-end">
+            <label class="col-form-label">Tętno maksymalne</label>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="col-5 col-sm-3 col-md-2">
+                <input type="text" class="form-control text-center border-dark" name="thalachh" required>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center align-items-center py-2 mx-1">
+        <div class="col-6 col-xl-4 text-end">
+            <label class="col-form-label pt-0">Ból w klatce spowodowany wysiłkiem fizycznym</label>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="exng" id="exngRadio1" value="0"
+                    required>
+                <label class="form-check-label" for="exngRadio1">Nie</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="exng" id="exngRadio2" value="1"
+                    required>
+                <label class="form-check-label" for="exngRadio2">Tak</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none row justify-content-center align-items-center py-2 mx-1" id="oldpeak">
+        <div class="col-6 col-xl-4 text-end">
+            <label class="col-form-label">Stopień zmiany odcinka ST</label>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="col-5 col-sm-3 col-md-2">
+                <input type="text" class="form-control text-center border-dark" name="oldpeak">
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none row justify-content-center align-items-center py-2 mx-1" id="slp">
+        <div class="col-6 col-xl-4 text-end">
+            <label class="col-form-label">Szczytowe nachylenie odcinka ST w trakcie ćwiczeń</label>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="slp" id="slpRadio1" value="0">
+                <label class="form-check-label" for="slpRadio1">Rosnące</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="slp" id="slpRadio2" value="1">
+                <label class="form-check-label" for="slpRadio2">Płaskie</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="slp" id="slpRadio3" value="2">
+                <label class="form-check-label" for="slpRadio3">Malejące</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none row justify-content-center align-items-center py-2 mx-1" id="caa">
+        <div class="col-6 col-xl-4 text-end">
+            <label class="col-form-label pt-0">Liczba powiększonych tętnic</label>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="caa" id="caaRadio1" value="0">
+                <label class="form-check-label" for="caaRadio1">0</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="caa" id="caaRadio2" value="1">
+                <label class="form-check-label" for="caaRadio2">1</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="caa" id="caaRadio3" value="2">
+                <label class="form-check-label" for="caaRadio3">2</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="caa" id="caaRadio4" value="3">
+                <label class="form-check-label" for="caaRadio4">3</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-none row justify-content-center align-items-center py-2 mx-1" id="thall">
+        <div class="col-6 col-xl-4 text-end">
+            <label class="col-form-label pt-0">Niedokrwistość tarczowatokrwinkowa</label>
+        </div>
+        <div class="col-6 col-xl-4">
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="thall" id="thallRadio1" value="1">
+                <label class="form-check-label" for="thallRadio1">Wada wyleczona</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="thall" id="thallRadio2" value="2">
+                <label class="form-check-label" for="thallRadio2">Brak</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input btn-outline-dark" type="radio" name="thall" id="thallRadio3" value="3">
+                <label class="form-check-label" for="thallRadio3">Wada odwracalna</label>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center align-items-center py-3 mx-3">
+        <button type="submit" class="btn btn-dark">Oblicz ryzyko</button>
+    </div>
+
+    <div id="low_risk" class="d-none alert alert-success py-3 mx-3 text-center" role="alert">
+        Ufff na razie jesteś bezpieczny! :-)
+    </div>
+
+    <div id="high_risk" class="d-none alert alert-danger py-3 mx-3 text-center" role="alert">
+        Uwaga! Jesteś w grupie wysokiego ryzyka zawału. Zadbaj o swoje zdrowie!
+    </div>
+
+</form>
+
+{% endblock %}
